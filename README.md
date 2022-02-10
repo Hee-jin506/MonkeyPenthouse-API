@@ -7,9 +7,9 @@ Check the API Docs at -> https://documenter.getpostman.com/view/17717982/UUy1dmh
 **NOTE - This project is currently under develop.**
 
 ## Feature
-- [ ] Authentication/Authorization using JWT, Spring Security
+- [X] Authentication/Authorization using JWT, Spring Security
 - [ ] Social Login(Naver, Kakao, Apple)
-- [ ] CI/CD automation using Github Actions, Codedeploy
+- [X] CI/CD automation using Github Actions, Codedeploy
 - [ ] Amenity CRUD
 - [ ] Payment/Reservation
 - [ ] Administrator Page
