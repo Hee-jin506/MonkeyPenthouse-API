@@ -1,6 +1,6 @@
 package com.monkeypenthouse.core.security;
 
-import com.monkeypenthouse.core.dao.Tokens;
+import com.monkeypenthouse.core.entity.Tokens;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -28,11 +28,9 @@ public class TokenProvider {
     private static final String AUTHORITIES_KEY = "auth";
     private static final String BEARER_TYPE = "bearer";
     // accessToken 만료 시간
-//    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 15;
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60; // 연동 테스트를 위해 1분으로 변경
+    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 15;
     // refreshToken 만료 시간
-//    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 14;
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 2; // 연동 테스트를 위해 2분으로 변경
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 14;
 
     private final Key key;
 
@@ -78,6 +76,17 @@ public class TokenProvider {
                 .refreshToken(refreshToken)
                 .refreshTokenExpiresIn(refreshTokenExpiresIn.getTime())
                 .build();
+    }
+
+    public String generateSimpleToken(String name, String authorities, long expiredTime) {
+        long now = (new Date()).getTime();
+        Date accessTokenExpiresIn = new Date(now + expiredTime);
+        return Jwts.builder()
+                .setSubject(name)       // payload "sub": "name"
+                .claim(AUTHORITIES_KEY, authorities)        // payload "auth": "ROLE_USER"
+                .setExpiration(accessTokenExpiresIn)        // payload "exp": now + 15m
+                .signWith(key, SignatureAlgorithm.HS512)    // header "alg": "HS512"
+                .compact();
     }
 
     // accessToken에서 username과 authority 정보를 추출하여 Authentication 객체를 생성하고 리턴

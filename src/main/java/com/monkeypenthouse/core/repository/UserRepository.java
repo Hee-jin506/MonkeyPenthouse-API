@@ -1,14 +1,15 @@
 package com.monkeypenthouse.core.repository;
 
-import com.monkeypenthouse.core.dao.LifeStyle;
-import com.monkeypenthouse.core.dao.LoginType;
-import com.monkeypenthouse.core.dao.Room;
-import com.monkeypenthouse.core.dao.User;
+import com.monkeypenthouse.core.entity.LifeStyle;
+import com.monkeypenthouse.core.entity.LoginType;
+import com.monkeypenthouse.core.entity.Room;
+import com.monkeypenthouse.core.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -23,14 +24,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByPhoneNum(String phoneNum);
 
-    Optional<User> findByNameAndPhoneNum(String name, String phoneNum);
+    Optional<User> findByPhoneNum(String phoneNum);
 
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE User u SET u.password = :password WHERE u.id = :id")
+    @Query("UPDATE User u SET u.password = :password WHERE u.email = :email")
     int updatePassword(@Param("password") String password,
-                      @Param("id") Long id);
+                      @Param("email") String email);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE User u SET u.lifeStyle = :lifeStyle WHERE u.id = :id")
     int updateLifeStyle(@Param("lifeStyle") LifeStyle lifeStyle, Long id);
+
+    Boolean existsByPhoneNumAndEmail(String phoneNum, String email);
 }

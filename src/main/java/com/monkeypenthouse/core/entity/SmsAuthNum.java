@@ -1,4 +1,4 @@
-package com.monkeypenthouse.core.dao;
+package com.monkeypenthouse.core.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;

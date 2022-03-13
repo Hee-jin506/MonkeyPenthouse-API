@@ -1,16 +1,17 @@
 package com.monkeypenthouse.core.service;
 
-import com.monkeypenthouse.core.dao.LoginType;
-import com.monkeypenthouse.core.dao.Tokens;
-import com.monkeypenthouse.core.dao.User;
+import com.monkeypenthouse.core.entity.LoginType;
+import com.monkeypenthouse.core.entity.Tokens;
+import com.monkeypenthouse.core.entity.User;
 import com.monkeypenthouse.core.exception.AuthFailedException;
 import com.monkeypenthouse.core.exception.DataNotFoundException;
 import com.monkeypenthouse.core.exception.ExpectedException;
+import com.monkeypenthouse.core.vo.CheckUserResponseVo;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Map;
-import java.util.Optional;
 
 public interface UserService {
 
@@ -50,10 +51,10 @@ public interface UserService {
     User authNaver(String token) throws AuthFailedException;
 
     // 유저의 이메일 찾기
-    User findEmail(User user) throws AuthFailedException;
+    User findEmail(String phoneNum) throws AuthFailedException;
 
     // 유저의 비밀번호 수정
-    void updatePassword(User user) throws AuthFailedException;
+    void updatePassword(UserDetails userDetails, String password) throws AuthFailedException;
 
     // 유저의 라이프스타일 수정
     void updateLifeStyle(User user) throws AuthFailedException;
@@ -63,4 +64,7 @@ public interface UserService {
 
     // 로그아웃
     void logout() throws Exception;
+
+    // 이메일과 전화번호로 회원여부를 확인
+    CheckUserResponseVo checkUser(String phoneNum, String email);
 }

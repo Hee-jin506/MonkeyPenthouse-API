@@ -3,30 +3,28 @@ package com.monkeypenthouse.core.controller;
 import com.monkeypenthouse.core.common.DefaultRes;
 import com.monkeypenthouse.core.common.ResponseMessage;
 import com.monkeypenthouse.core.common.SocialLoginRes;
-import com.monkeypenthouse.core.dao.*;
-import com.monkeypenthouse.core.dto.TokenDTO.*;
+import com.monkeypenthouse.core.dto.CheckUserResponseDTO;
+import com.monkeypenthouse.core.entity.*;
 import com.monkeypenthouse.core.dto.UserDTO;
 import com.monkeypenthouse.core.dto.UserDTO.*;
 import com.monkeypenthouse.core.service.MessageService;
-import com.monkeypenthouse.core.service.RoomService;
 import com.monkeypenthouse.core.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.validation.constraints.Pattern;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/user/all/")
 @Log4j2
 @RequiredArgsConstructor
+@Validated
 public class UserForAllController {
 
     private final UserService userService;
@@ -193,28 +191,27 @@ public class UserForAllController {
     }
 
     @GetMapping(value = "/find-email")
-    public ResponseEntity<DefaultRes<?>> findEmail(@RequestBody @Valid FindEmailReqDTO userDTO) throws Exception {
-        User user = modelMapper.map(userDTO, User.class);
+    public ResponseEntity<DefaultRes<?>> findEmail(@RequestParam("phoneNum") @Pattern(regexp = "^\\d{9,11}$") String phoneNum) throws Exception {
 
         return new ResponseEntity<>(
                     DefaultRes.res(
                             HttpStatus.OK.value(),
                             ResponseMessage.READ_USER,
-                            modelMapper.map(userService.findEmail(user), FindEmailResDTO.class)),
+                            modelMapper.map(userService.findEmail(phoneNum), FindEmailResDTO.class)),
                     HttpStatus.OK
         );
     }
 
-    @PatchMapping(value = "/password")
-    public ResponseEntity<DefaultRes<?>> updatePassword(@RequestBody @Valid UpdatePWReqDTO userDTO) throws Exception {
-        User user = modelMapper.map(userDTO, User.class);
-        userService.updatePassword(user);
-
+    @GetMapping(value = "/check-user")
+    public ResponseEntity<DefaultRes<?>> checkUser(@RequestParam("phoneNum") @Pattern(regexp = "^\\d{9,11}$") String phoneNum,
+                                                   @RequestParam("email") @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,6}$") String email) throws Exception {
         return new ResponseEntity<>(
                 DefaultRes.res(
                         HttpStatus.OK.value(),
-                        ResponseMessage.UPDATE_USER),
+                        ResponseMessage.READ_USER,
+                        CheckUserResponseDTO.of(userService.checkUser(phoneNum, email))),
                 HttpStatus.OK
         );
     }
+
 }

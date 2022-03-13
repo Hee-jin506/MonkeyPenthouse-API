@@ -1,8 +1,8 @@
 package com.monkeypenthouse.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.monkeypenthouse.core.dao.LifeStyle;
-import com.monkeypenthouse.core.dao.LoginType;
+import com.monkeypenthouse.core.entity.LifeStyle;
+import com.monkeypenthouse.core.entity.LoginType;
 import lombok.*;
 
 import javax.validation.constraints.*;
@@ -131,21 +131,6 @@ public class UserDTO {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class FindEmailReqDTO extends UserDTO{
-
-        @NotBlank(message = "이름은 필수 입력값입니다.")
-        private String name;
-
-        @NotBlank(message = "전화번호는 필수 입력값입니다.")
-        @Pattern(regexp = "^\\d{9,11}$")
-        private String phoneNum;
-    }
-
-    @Builder
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    @NoArgsConstructor
     public static class FindEmailResDTO extends UserDTO {
         private Long id;
         private String email;
@@ -158,8 +143,6 @@ public class UserDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class UpdatePWReqDTO extends UserDTO {
-        @NotNull(message = "id는 필수 입력값입니다.")
-        private Long id;
         @NotBlank(message = "비밀번호는 필수 입력값입니다.")
         @Pattern(regexp = "^(?=.*[$@!%*#?&A-Za-z])[A-Za-z0-9$@$!%*#?&]{8,16}$")
         private String password;

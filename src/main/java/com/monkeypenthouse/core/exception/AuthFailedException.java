@@ -1,6 +1,6 @@
 package com.monkeypenthouse.core.exception;
 
-import com.monkeypenthouse.core.dao.User;
+import com.monkeypenthouse.core.entity.User;
 import com.monkeypenthouse.core.dto.UserDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;

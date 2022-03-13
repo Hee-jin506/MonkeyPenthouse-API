@@ -1,7 +1,7 @@
 package com.monkeypenthouse.core.service;
 
-import com.monkeypenthouse.core.dao.Room;
-import com.monkeypenthouse.core.dao.User;
+import com.monkeypenthouse.core.entity.Room;
+import com.monkeypenthouse.core.entity.User;
 
 public interface RoomService {
     Room giveVoidRoomForUser(User user) throws Exception;

@@ -1,6 +1,6 @@
 package com.monkeypenthouse.core.security;
 
-import com.monkeypenthouse.core.dao.User;
+import com.monkeypenthouse.core.entity.User;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

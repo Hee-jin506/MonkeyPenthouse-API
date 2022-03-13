@@ -1,4 +1,4 @@
-package com.monkeypenthouse.core.dao;
+package com.monkeypenthouse.core.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,6 +1,6 @@
 package com.monkeypenthouse.core.service;
 
-import com.monkeypenthouse.core.dao.SmsAuthNum;
+import com.monkeypenthouse.core.entity.SmsAuthNum;
 import com.monkeypenthouse.core.repository.SmsAuthNumRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

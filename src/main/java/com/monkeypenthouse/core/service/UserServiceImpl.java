@@ -1,9 +1,8 @@
 package com.monkeypenthouse.core.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.monkeypenthouse.core.connect.KakaoConnector;
 import com.monkeypenthouse.core.connect.NaverConnector;
-import com.monkeypenthouse.core.dao.*;
+import com.monkeypenthouse.core.entity.*;
 import com.monkeypenthouse.core.dto.KakaoUserDTO;
 import com.monkeypenthouse.core.dto.NaverUserDTO;
 import com.monkeypenthouse.core.exception.*;
@@ -13,6 +12,7 @@ import com.monkeypenthouse.core.repository.UserRepository;
 import com.monkeypenthouse.core.security.PrincipalDetails;
 import com.monkeypenthouse.core.security.SecurityUtil;
 import com.monkeypenthouse.core.security.TokenProvider;
+import com.monkeypenthouse.core.vo.CheckUserResponseVo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -24,15 +24,12 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
@@ -74,7 +71,6 @@ public class UserServiceImpl implements UserService {
 
     // Id로 회원 조회
     @Override
-    @Transactional(readOnly = true)
     public User getById(Long id) throws DataNotFoundException {
         return userRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(User.builder().id(id).build()));
@@ -87,14 +83,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public User getUserByEmailAndLoginType(String email, LoginType loginType) throws DataNotFoundException {
         return userRepository.findByEmailAndLoginType(email, loginType)
                 .orElseThrow(() -> new DataNotFoundException(User.builder().email(email).loginType(loginType).build()));
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean checkEmailDuplicate(String email) {
         return userRepository.existsByEmail(email);
     }
@@ -181,14 +175,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public User getMyInfo() throws AuthFailedException {
         return userRepository.findByEmail(SecurityUtil.getCurrentUserEmail())
                 .orElseThrow(() -> new AuthFailedException("회원 정보를 찾지 못했습니다."));
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public User authKakao(String token) throws AuthFailedException {
         KakaoUserDTO kakaoUser;
         try {
@@ -198,13 +191,25 @@ public class UserServiceImpl implements UserService {
         }
         Optional<User> optionalUser = userRepository.findByEmailAndLoginType(kakaoUser.getKakao_account().getEmail(), LoginType.KAKAO);
 
+        // 비밀번호 랜덤 문자열 생성 숫자+알파벳
+        int leftLimit = 48; // numeral '0'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 16;
+        Random random = new Random();
+
+        String generatedString = random.ints(leftLimit,rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+
         User loggedInUser = optionalUser
                 .orElseThrow(() -> {
                     User newUser = User.builder()
                         .name(kakaoUser.getKakao_account().getProfile().getNickname())
                         .gender(kakaoUser.getKakao_account().isHas_gender() ? kakaoUser.getKakao_account().getGender().equals("female") ? 0 : 1 : 2)
                         .email(kakaoUser.getKakao_account().isHas_email() ? kakaoUser.getKakao_account().getEmail() : null)
-                        .password(UUID.randomUUID().toString())
+                        .password(generatedString)
                         .loginType(LoginType.KAKAO)
                         .build();
                     return new SocialLoginFailedException(LoginType.KAKAO, newUser);
@@ -216,13 +221,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public User authNaver(String token) throws AuthFailedException {
         NaverUserDTO naverUser;
         try {
             naverUser = naverConnector.getUserInfo(token);
         } catch (Exception e) {
-            System.out.println("e = " + e);
             throw new SocialLoginFailedException(LoginType.NAVER);
         }
             Optional<User> optionalUser = userRepository.findByEmailAndLoginType(naverUser.getResponse().getEmail(), LoginType.NAVER);
@@ -248,17 +252,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findEmail(User user) throws AuthFailedException {
-        return userRepository.findByNameAndPhoneNum(user.getName(), user.getPhoneNum())
+    public User findEmail(String phoneNum) throws AuthFailedException {
+        return userRepository.findByPhoneNum(phoneNum)
                 .orElseThrow(() -> new AuthFailedException("해당 정보의 회원을 찾을 수 없습니다."));
     }
 
     @Override
     @Transactional
-    public void updatePassword(User user) throws AuthFailedException {
+    public void updatePassword(UserDetails userDetails, String password) throws AuthFailedException  {
         int result = userRepository.updatePassword(
-                passwordEncoder.encode(user.getPassword()),
-                user.getId());
+                passwordEncoder.encode(password),
+                userDetails.getUsername());
 
         if (result == 0) {
             throw new AuthFailedException("해당 정보의 회원을 찾을 수 없습니다.");
@@ -292,5 +296,22 @@ public class UserServiceImpl implements UserService {
     public void logout() throws Exception {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         refreshTokenRepository.deleteById(authentication.getName());
+    }
+
+    @Override
+    public CheckUserResponseVo checkUser(String phoneNum, String email) {
+
+        Boolean result = userRepository.existsByPhoneNumAndEmail(phoneNum, email);
+        if (!result) {
+            return CheckUserResponseVo.builder().result(false).build();
+        }
+        String token = tokenProvider.generateSimpleToken(email, "GUEST", 1000 * 60 * 15);
+
+        return CheckUserResponseVo
+                .builder()
+                .result(true)
+                .token(token)
+                .build();
+
     }
 }

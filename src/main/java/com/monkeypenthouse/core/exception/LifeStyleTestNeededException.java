@@ -1,10 +1,8 @@
 package com.monkeypenthouse.core.exception;
 
-import com.monkeypenthouse.core.dao.User;
+import com.monkeypenthouse.core.entity.User;
 import com.monkeypenthouse.core.dto.UserDTO.*;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 
 import java.util.Optional;
 

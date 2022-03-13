@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableJpaAuditing
 @EntityScan(
 		basePackageClasses = {Jsr310JpaConverters.class},
-		basePackages = {"com.monkeypenthouse.core.dao"})
+		basePackages = {"com.monkeypenthouse.core.entity"})
 @SpringBootApplication
 public class CoreApplication {
 

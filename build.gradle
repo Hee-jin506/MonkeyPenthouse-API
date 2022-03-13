@@ -51,6 +51,30 @@ dependencies {
 
 	// 소셜 로그인을 위한 OAuth2
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:2.5.5'
+
+	// aws cloudfront
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.1.RELEASE'
+	implementation 'net.java.dev.jets3t:jets3t:0.9.4'
+	implementation 'org.bouncycastle:bcprov-jdk16:1.46'
+
+	// queryDSL
+	implementation "com.querydsl:querydsl-core:4.4.0"
+	implementation "com.querydsl:querydsl-jpa:4.4.0"
+	annotationProcessor(
+			"jakarta.persistence:jakarta.persistence-api",
+			"jakarta.annotation:jakarta.annotation-api",
+			"com.querydsl:querydsl-apt:4.4.0:jpa")
+
+	// Swagger
+	implementation 'io.springfox:springfox-boot-starter:3.0.0'
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs = ["$projectDir/src/main/java", "$projectDir/build/generated"]
+		}
+	}
 }
 
 test {
@@ -61,6 +85,10 @@ test {
 asciidoctor {
 	inputs.dir snippetsDir
 	dependsOn test
+}
+
+build {
+	build
 }
 
 jar {

@@ -30,6 +30,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
+    private static final String[] EXCLUDE_SWAGGER_REQUEST_PATH = {
+            "/v2/api-docs/**", "/swagger*/**", "/webjars/**",
+            "/swagger-resources/configuration/ui", "/swagger-resources", "/swagger-resources/configuration/security",
+            "/swagger-ui/",
+    };
+
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -41,31 +47,34 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         // csrf 비활성
         http.httpBasic().disable()
-        .cors().configurationSource(corsConfigurationSource())
-        .and()
-        .csrf().disable()
+                .cors().configurationSource(corsConfigurationSource())
+                .and()
+                .csrf().disable()
 
-        // exception handling할 때 커스텀 클래스 추가
-        .exceptionHandling()
-        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-        .accessDeniedHandler(jwtAccessDeniedHandler)
+                // exception handling할 때 커스텀 클래스 추가
+                .exceptionHandling()
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .accessDeniedHandler(jwtAccessDeniedHandler)
 
-        // 시큐리티 세션 설정을 Stateless로 설정
-        .and()
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                // 시큐리티 세션 설정을 Stateless로 설정
+                .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 
-        // 로그인, 회원가입 API는 토큰이 없는 상태에서 요청이 들어오기 때문에 permitAll 설정
-        .and()
-        .authorizeRequests()
-        .antMatchers("/").permitAll()
-        .antMatchers("/user/all/*").permitAll()
-        .antMatchers("/user/all/*/*").permitAll()
-        .anyRequest().authenticated()
+                // 로그인, 회원가입 API는 토큰이 없는 상태에서 요청이 들어오기 때문에 permitAll 설정
+                .and()
+                .authorizeRequests()
+                .antMatchers(EXCLUDE_SWAGGER_REQUEST_PATH).permitAll()
+                .antMatchers("/").permitAll()
+                .antMatchers("/user/all/*").permitAll()
+                .antMatchers("/user/all/*/*").permitAll()
+                .antMatchers("/amenity/*").permitAll()
+                .antMatchers("/user/guest/*").hasAnyAuthority("GUEST")
+                .anyRequest().authenticated()
 
-        // JwtFilter를 addFilterBefore로 등록했던 JwtSecurityConfig 클래스를 적용
-        .and()
-        .addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
+                // JwtFilter를 addFilterBefore로 등록했던 JwtSecurityConfig 클래스를 적용
+                .and()
+                .addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.formLogin();
     }
