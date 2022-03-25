@@ -10,6 +10,6 @@ Check the API Docs at -> https://documenter.getpostman.com/view/17717982/UUy1dmh
 - [X] Authentication/Authorization using JWT, Spring Security
 - [ ] Social Login(Naver, Kakao, Apple)
 - [X] CI/CD automation using Github Actions, Codedeploy
-- [ ] Amenity CRUD
+- [X] Amenity CRUD
 - [ ] Payment/Reservation
 - [ ] Administrator Page
