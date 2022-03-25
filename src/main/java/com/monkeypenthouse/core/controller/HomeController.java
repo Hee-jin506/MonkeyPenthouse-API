@@ -1,22 +1,24 @@
 package com.monkeypenthouse.core.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.monkeypenthouse.core.component.CommonResponseMaker;
+import com.monkeypenthouse.core.component.CommonResponseMaker.CommonResponseBody;
+import com.monkeypenthouse.core.component.CommonResponseMaker.CommonResponseEntity;
+import com.monkeypenthouse.core.constant.ResponseCode;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import com.monkeypenthouse.core.common.DefaultRes;
 
 @Controller
+@RequiredArgsConstructor
 @RequestMapping("/")
 public class HomeController {
 
+    private final CommonResponseMaker commonResponseMaker;
+
     @RequestMapping("/")
-    public ResponseEntity<DefaultRes<?>> home() {
-        return new ResponseEntity<>(
-                DefaultRes.res(HttpStatus.OK.value(), "hello world!"),
-                HttpStatus.OK
-        );
+    public CommonResponseEntity home() {
+
+        return commonResponseMaker.makeCommonResponse(ResponseCode.SUCCESS);
     }
 
 }

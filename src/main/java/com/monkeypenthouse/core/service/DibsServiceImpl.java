@@ -1,11 +1,11 @@
 package com.monkeypenthouse.core.service;
 
+import com.monkeypenthouse.core.constant.ResponseCode;
 import com.monkeypenthouse.core.entity.Amenity;
 import com.monkeypenthouse.core.entity.Dibs;
 import com.monkeypenthouse.core.entity.DibsId;
 import com.monkeypenthouse.core.entity.User;
-import com.monkeypenthouse.core.exception.DataNotFoundException;
-import com.monkeypenthouse.core.exception.DibsDuplicatedException;
+import com.monkeypenthouse.core.exception.CommonException;
 import com.monkeypenthouse.core.repository.AmenityRepository;
 import com.monkeypenthouse.core.repository.DibsRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +23,14 @@ public class DibsServiceImpl implements DibsService {
 
     @Override
     @Transactional
-    public void createDibs(final UserDetails userDetails, final Long amenityId) throws DataNotFoundException {
+    public void createDibs(final UserDetails userDetails, final Long amenityId){
         final User user = userService.getUserByEmail(userDetails.getUsername());
 
         final Amenity amenity = amenityRepository.findById(amenityId)
-                .orElseThrow(() -> new DataNotFoundException(Amenity.builder().id(amenityId).build()));
+                .orElseThrow(() -> new CommonException(ResponseCode.DATA_NOT_FOUND));
 
         dibsRepository.findByUserAndAmenity(user, amenity).ifPresent((d) -> {
-                throw new DibsDuplicatedException();
+                throw new CommonException(ResponseCode.DATA_DUPLICATED);
         });
 
         final Dibs dibs = new Dibs(user, amenity);
@@ -40,13 +40,13 @@ public class DibsServiceImpl implements DibsService {
 
     @Override
     @Transactional
-    public void deleteDibs(UserDetails userDetails, Long amenityId) throws DataNotFoundException {
+    public void deleteDibs(UserDetails userDetails, Long amenityId) {
         final User user = userService.getUserByEmail(userDetails.getUsername());
 
         final DibsId dibsId = new DibsId(user.getId(), amenityId);
 
         final Dibs dibs = dibsRepository.findById(dibsId)
-                .orElseThrow(() -> new DataNotFoundException(Dibs.builder().user(user).build()));
+                .orElseThrow(() -> new CommonException(ResponseCode.DATA_NOT_FOUND));
 
         dibsRepository.delete(dibs);
     }

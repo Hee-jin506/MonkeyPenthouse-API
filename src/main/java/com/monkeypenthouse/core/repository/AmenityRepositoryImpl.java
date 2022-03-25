@@ -2,6 +2,7 @@ package com.monkeypenthouse.core.repository;
 
 import com.monkeypenthouse.core.dto.querydsl.*;
 import com.monkeypenthouse.core.entity.Amenity;
+import com.monkeypenthouse.core.entity.User;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
@@ -17,11 +18,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.monkeypenthouse.core.entity.QAmenity.*;
-import static com.monkeypenthouse.core.entity.QParticipateIn.*;
+import static com.monkeypenthouse.core.entity.QOrderProduct.*;
 import static com.monkeypenthouse.core.entity.QTicket.*;
 import static com.monkeypenthouse.core.entity.QAmenityCategory.*;
 import static com.monkeypenthouse.core.entity.QCategory.*;
 import static com.monkeypenthouse.core.entity.QDibs.*;
+import static com.monkeypenthouse.core.entity.QUser.*;
 
 
 @RequiredArgsConstructor
@@ -35,14 +37,14 @@ public class AmenityRepositoryImpl implements AmenityRepositoryCustom {
         List<CurrentPersonAndFundingPriceAndDibsOfAmenityDTO> list = queryFactory
                 .from(amenity)
                 .leftJoin(amenity.tickets, ticket)
-                .leftJoin(ticket.participateIns, participateIn)
+                .leftJoin(ticket.orderProducts, orderProduct)
                 .leftJoin(amenity.dibs, dibs)
                 .where(amenity.id.eq(id))
                 .groupBy(amenity.id)
                 .select(
                         new QCurrentPersonAndFundingPriceAndDibsOfAmenityDTO(
-                                participateIn.count.sum().coalesce(0),
-                                ticket.price.multiply(participateIn.count.coalesce(0)).sum(),
+                                orderProduct.quantity.sum().coalesce(0),
+                                ticket.price.multiply(orderProduct.quantity.coalesce(0)).sum(),
                                 ExpressionUtils.as(
                                         JPAExpressions.select(dibs.count().coalesce(0L))
                                         .from(dibs)
@@ -87,6 +89,21 @@ public class AmenityRepositoryImpl implements AmenityRepositoryCustom {
     }
 
     @Override
+    public Page<AmenitySimpleDTO> findPageByDibsOfUser(Long userId, Pageable pageable) {
+        JPQLQuery<AmenitySimpleDTO> query = getQueryForAmenitySimpleDTO()
+                .leftJoin(amenity.dibs, dibs)
+                .leftJoin(dibs.user, user)
+                .where(user.id.eq(userId));
+        List<AmenitySimpleDTO> content = applicatePageable(query, pageable).fetch();
+        long totalCount = queryFactory.selectFrom(amenity)
+                .leftJoin(amenity.dibs, dibs)
+                .leftJoin(dibs.user, user)
+                .where(user.id.eq(userId))
+                .fetchCount();
+        return new PageImpl<>(content, pageable, totalCount);
+    }
+
+    @Override
     public List<TicketOfAmenityDto> getTicketsOfAmenity(Long amenityId) {
         return queryFactory
                 .select(new QTicketOfAmenityDto(
@@ -95,12 +112,12 @@ public class AmenityRepositoryImpl implements AmenityRepositoryCustom {
                         ticket.detail,
                         ticket.capacity,
                         ticket.price,
-                        participateIn.count.sum().coalesce(0)
+                        orderProduct.quantity.sum().coalesce(0)
                 ))
                 .from(ticket)
                 .where(ticket.amenity.id.eq(amenityId))
                 .rightJoin(ticket.amenity, amenity)
-                .leftJoin(participateIn).on(ticket.id.eq(participateIn.ticket.id))
+                .leftJoin(orderProduct).on(ticket.id.eq(orderProduct.ticket.id))
                 .groupBy(ticket.id)
                 .fetch();
     }
@@ -108,14 +125,14 @@ public class AmenityRepositoryImpl implements AmenityRepositoryCustom {
     private JPQLQuery<AmenitySimpleDTO> getQueryForAmenitySimpleDTO() {
         return queryFactory.from(amenity)
                 .leftJoin(amenity.tickets, ticket)
-                .leftJoin(ticket.participateIns, participateIn)
+                .leftJoin(ticket.orderProducts, orderProduct)
                 .groupBy(amenity.id)
                 .select(new QAmenitySimpleDTO(
                         amenity.id,
                         amenity.title,
                         amenity.minPersonNum,
                         amenity.maxPersonNum,
-                        participateIn.count.sum().coalesce(0).as("currentPersonNum"),
+                        orderProduct.quantity.sum().coalesce(0).as("currentPersonNum"),
                         amenity.thumbnailName,
                         amenity.address,
                         amenity.startDate,
@@ -132,6 +149,5 @@ public class AmenityRepositoryImpl implements AmenityRepositoryCustom {
                     Order.ASC : Order.DESC, orderByExpression.get(e.getProperty())));
         });
         return query;
-
     }
 }

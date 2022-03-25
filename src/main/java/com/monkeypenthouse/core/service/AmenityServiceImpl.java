@@ -2,13 +2,14 @@ package com.monkeypenthouse.core.service;
 
 import com.monkeypenthouse.core.connect.CloudFrontManager;
 import com.monkeypenthouse.core.connect.S3Uploader;
+import com.monkeypenthouse.core.constant.ResponseCode;
 import com.monkeypenthouse.core.dto.querydsl.AmenitySimpleDTO;
 import com.monkeypenthouse.core.dto.querydsl.CurrentPersonAndFundingPriceAndDibsOfAmenityDTO;
 import com.monkeypenthouse.core.dto.querydsl.TicketOfAmenityDto;
 import com.monkeypenthouse.core.entity.*;
 import com.monkeypenthouse.core.dto.AmenityDTO.*;
 import com.monkeypenthouse.core.dto.TicketDTO;
-import com.monkeypenthouse.core.exception.DataNotFoundException;
+import com.monkeypenthouse.core.exception.CommonException;
 import com.monkeypenthouse.core.repository.*;
 import com.monkeypenthouse.core.vo.*;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.jets3t.service.CloudFrontServiceException;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -131,10 +133,10 @@ public class AmenityServiceImpl implements AmenityService {
 
     @Override
     @Transactional(readOnly = true)
-    public GetByIdResponseVo getById(Long id) throws DataNotFoundException, CloudFrontServiceException, IOException {
-        Amenity amenity = amenityRepository.findWithPhotosById(id).orElseThrow(() -> new DataNotFoundException(Amenity.builder().id(id).build()));
+    public GetByIdResponseVo getById(Long id) throws CloudFrontServiceException, IOException {
+        Amenity amenity = amenityRepository.findWithPhotosById(id).orElseThrow(() -> new CommonException(ResponseCode.DATA_NOT_FOUND));
         CurrentPersonAndFundingPriceAndDibsOfAmenityDTO currentPersonAndFundingPriceAndDibs = amenityRepository.findcurrentPersonAndFundingPriceAndDibsOfAmenityById(id)
-                .orElseThrow(() -> new DataNotFoundException(Amenity.builder().id(id).build()));
+                .orElseThrow(() -> new CommonException(ResponseCode.DATA_NOT_FOUND));
         return amenityDetailDtoToVo(amenity, currentPersonAndFundingPriceAndDibs);
     }
 
@@ -178,10 +180,9 @@ public class AmenityServiceImpl implements AmenityService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Amenity> getAmenitiesDibsOn(final UserDetails userDetails) throws DataNotFoundException {
+    public GetPageResponseVo getAmenitiesDibsOn(final UserDetails userDetails, Pageable pageable) throws CloudFrontServiceException, IOException {
         final User user = userService.getUserByEmail(userDetails.getUsername());
-
-        return dibsRepository.findAllByUser(user).stream().map(dibs -> dibs.getAmenity()).collect(Collectors.toList());
+        return amenitySimpleDtoToVo(amenityRepository.findPageByDibsOfUser(user.getId(), pageable));
     }
 
     @Override
@@ -221,6 +222,14 @@ public class AmenityServiceImpl implements AmenityService {
                                         .build())
                                 .collect(Collectors.toList()))
                 .build();
+    }
+
+    @Override
+    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정
+    @Transactional
+    public void updateStatusOfAmenity() {
+        LocalDate today = LocalDate.now();
+        amenityRepository.updateStatusByDeadlineDate(today);
     }
 
     private GetPageResponseVo amenitySimpleDtoToVo(Page<AmenitySimpleDTO> pages) throws CloudFrontServiceException, IOException {

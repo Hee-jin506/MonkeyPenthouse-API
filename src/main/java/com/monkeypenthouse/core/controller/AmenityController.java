@@ -1,19 +1,16 @@
 package com.monkeypenthouse.core.controller;
 
-import com.monkeypenthouse.core.common.DefaultRes;
+import com.monkeypenthouse.core.component.CommonResponseMaker;
+import com.monkeypenthouse.core.component.CommonResponseMaker.CommonResponseEntity;
+import com.monkeypenthouse.core.constant.ResponseCode;
 import com.monkeypenthouse.core.dto.GetPageResponseDTO;
-import com.monkeypenthouse.core.common.ResponseMessage;
 import com.monkeypenthouse.core.dto.AmenityDTO.*;
 import com.monkeypenthouse.core.dto.GetTicketsOfAmenityResponseDto;
-import com.monkeypenthouse.core.exception.DataNotFoundException;
 import com.monkeypenthouse.core.service.AmenityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/amenity")
@@ -29,104 +25,65 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AmenityController {
     private final AmenityService amenityService;
-    private final ModelMapper modelMapper;
+    private final CommonResponseMaker commonResponseMaker;
 
     @PostMapping(value = "/")
-    public ResponseEntity<DefaultRes<?>> signUp(
+    public CommonResponseEntity signUp(
             @RequestPart(value = "bannerPhotos", required = false) List<MultipartFile> bannerPhotos,
             @RequestPart(value = "detailPhotos", required = false) List<MultipartFile> detailPhotos,
             @RequestPart(value = "saveReqDTO") @Valid SaveReqDTO amenityDTO) throws Exception {
         amenityService.add(bannerPhotos, detailPhotos, amenityDTO);
-        return new ResponseEntity<>(
-                DefaultRes.res(
-                        HttpStatus.CREATED.value(),
-                        ResponseMessage.CREATED_AMENITY),
-                HttpStatus.CREATED
-        );
+
+        return commonResponseMaker.makeCommonResponse(ResponseCode.SUCCESS);
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<DefaultRes<?>> getById(@PathVariable("id") Long id) throws Exception {
-        return new ResponseEntity<>(
-                DefaultRes.res(
-                        HttpStatus.OK.value(),
-                        ResponseMessage.READ_INFO,
-                        amenityService.getById(id)),
-                HttpStatus.OK
-        );
+    public CommonResponseEntity getById(@PathVariable("id") Long id) throws Exception {
+
+        return commonResponseMaker.makeCommonResponse(amenityService.getById(id), ResponseCode.SUCCESS);
     }
 
     @GetMapping(value = "/recently")
-    public ResponseEntity<DefaultRes<?>> getPage(Pageable pageable) throws Exception {
+    public CommonResponseEntity getPage(Pageable pageable) throws Exception {
 
         final GetPageResponseDTO responseDto =
                 GetPageResponseDTO.of(amenityService.getPage(pageable));
-        return new ResponseEntity<>(
-                DefaultRes.res(
-                        HttpStatus.OK.value(),
-                        ResponseMessage.READ_INFO,
-                        responseDto),
-                HttpStatus.OK
-        );
+        return commonResponseMaker.makeCommonResponse(responseDto, ResponseCode.SUCCESS);
     }
 
     @GetMapping(value = "/category")
-    public ResponseEntity<DefaultRes<?>> getPageByCategory(@Param("category") Long category, Pageable pageable) throws Exception {
+    public CommonResponseEntity getPageByCategory(@Param("category") Long category, Pageable pageable) throws Exception {
         final GetPageResponseDTO responseDto =
                 GetPageResponseDTO.of(amenityService.getPageByCategory(category, pageable));
-        return new ResponseEntity<>(
-                DefaultRes.res(
-                        HttpStatus.OK.value(),
-                        ResponseMessage.READ_INFO,
-                        responseDto),
-                HttpStatus.OK
-        );
+
+        return commonResponseMaker.makeCommonResponse(responseDto, ResponseCode.SUCCESS);
     }
 
     @GetMapping(value = "/recommended")
-    public ResponseEntity<DefaultRes<?>> getPageByRecommended(Pageable pageable) throws Exception {
+    public CommonResponseEntity getPageByRecommended(Pageable pageable) throws Exception {
+
         final GetPageResponseDTO responseDto =
                 GetPageResponseDTO.of(amenityService.getPageByRecommended(pageable));
-        return new ResponseEntity<>(
-                DefaultRes.res(
-                        HttpStatus.OK.value(),
-                        ResponseMessage.READ_INFO,
-                        responseDto),
-                HttpStatus.OK
-        );
+
+        return commonResponseMaker.makeCommonResponse(responseDto, ResponseCode.SUCCESS);
     }
 
     @GetMapping(value = "/dibs")
-    public ResponseEntity<DefaultRes<?>> getAmenitiesDibsOn(
-            @AuthenticationPrincipal final UserDetails userDetails) throws DataNotFoundException {
+    public CommonResponseEntity getPageByDibsOn(
+            @AuthenticationPrincipal final UserDetails userDetails,
+            Pageable pageable) throws Exception {
 
-        List<DetailDTO> amenityDTOList = amenityService.getAmenitiesDibsOn(userDetails)
-                .stream()
-                .map(amenity -> modelMapper.map(amenity, DetailDTO.class))
-                .collect(Collectors.toList());
+        final GetPageResponseDTO responseDTO = GetPageResponseDTO.of(amenityService.getAmenitiesDibsOn(userDetails, pageable));
 
-        return new ResponseEntity<>(
-                DefaultRes.res(
-                        HttpStatus.OK.value(),
-                        ResponseMessage.GET_AMENITY_DIBS_ON,
-                        amenityDTOList),
-                HttpStatus.OK
-        );
+        return commonResponseMaker.makeCommonResponse(responseDTO, ResponseCode.SUCCESS);
     }
 
     @GetMapping(value = "/{id}/tickets")
-    public ResponseEntity<DefaultRes<?>> getTicketsOfAmenity(@PathVariable("id") final Long amenityId)
-            throws DataNotFoundException {
+    public CommonResponseEntity getTicketsOfAmenity(@PathVariable("id") final Long amenityId) {
 
         final GetTicketsOfAmenityResponseDto responseDto =
                 GetTicketsOfAmenityResponseDto.of(amenityService.getTicketsOfAmenity(amenityId));
 
-        return new ResponseEntity<>(
-                DefaultRes.res(
-                        HttpStatus.OK.value(),
-                        ResponseMessage.GET_TICKETS_OF_AMENITY,
-                        responseDto),
-                HttpStatus.OK
-        );
+        return commonResponseMaker.makeCommonResponse(responseDto, ResponseCode.SUCCESS);
     }
 }

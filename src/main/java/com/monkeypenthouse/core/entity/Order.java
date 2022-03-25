@@ -12,12 +12,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Builder
-@Table(name="participate_in")
+@Table(name="order")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class ParticipateIn {
+public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,14 +27,20 @@ public class ParticipateIn {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "ticket_id", nullable = false)
-    private Ticket ticket;
+    @Column(name="order_id", nullable=false)
+    private String orderId;
+
+    @Column(name = "order_name", nullable = false)
+    private int orderName;
+
+    @Column(name = "price", nullable = false)
+    private int price;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus orderStatus;
 
     @CreatedDate
     @Column(name="created_at", updatable=false, nullable=false)
     private LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    private int count;
 }
