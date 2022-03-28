@@ -31,7 +31,7 @@ public class MessageServiceImpl implements MessageService {
     private final SmsAuthNumRepository smsAuthNumRepository;
 
     @Override
-    public void sendSMS(String toNumber) throws CoolsmsException {
+    public void sendAuthNum(String toNumber) throws CoolsmsException {
         String randomNumber = numberGen(6,1);
 
         Message message = new Message(apiKey, apiSecret);

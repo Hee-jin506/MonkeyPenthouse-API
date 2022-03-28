@@ -14,7 +14,7 @@ import java.util.Set;
 
 @Entity
 @Builder
-@Table(name="amenity")
+@Table(name="amenity", indexes = @Index(name = "ix_amenity_status_deadline_date", columnList = "status,deadline_date"))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

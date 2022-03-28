@@ -64,7 +64,7 @@ public class UserForAllController {
         final String phoneNum = map.get("phoneNum");
 
         userService.checkPhoneNumDuplicate(phoneNum);
-        messageService.sendSMS(phoneNum);
+        messageService.sendAuthNum(phoneNum);
 
         return commonResponseMaker.makeCommonResponse(ResponseCode.SUCCESS);
     }
