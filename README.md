@@ -11,5 +11,5 @@ Check the API Docs at -> https://documenter.getpostman.com/view/17717982/UUy1dmh
 - [ ] Social Login(Naver, Kakao, Apple)
 - [X] CI/CD automation using Github Actions, Codedeploy
 - [X] Amenity CRUD
-- [ ] Payment/Reservation
+- [X] Payment/Reservation
 - [ ] Administrator Page
