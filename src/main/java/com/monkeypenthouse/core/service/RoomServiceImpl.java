@@ -1,8 +1,8 @@
 package com.monkeypenthouse.core.service;
 
 import com.monkeypenthouse.core.constant.ResponseCode;
-import com.monkeypenthouse.core.entity.Room;
-import com.monkeypenthouse.core.entity.User;
+import com.monkeypenthouse.core.repository.entity.Room;
+import com.monkeypenthouse.core.repository.entity.User;
 import com.monkeypenthouse.core.exception.CommonException;
 import com.monkeypenthouse.core.repository.RoomRepository;
 import com.monkeypenthouse.core.repository.UserRepository;

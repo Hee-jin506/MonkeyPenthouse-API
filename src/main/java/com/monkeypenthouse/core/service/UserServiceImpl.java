@@ -3,19 +3,19 @@ package com.monkeypenthouse.core.service;
 import com.monkeypenthouse.core.connect.KakaoConnector;
 import com.monkeypenthouse.core.connect.NaverConnector;
 import com.monkeypenthouse.core.constant.ResponseCode;
-import com.monkeypenthouse.core.dto.exception.AdditionalInfoNeededResponseDTO;
-import com.monkeypenthouse.core.entity.*;
-import com.monkeypenthouse.core.dto.KakaoUserDTO;
-import com.monkeypenthouse.core.dto.NaverUserDTO;
+import com.monkeypenthouse.core.controller.dto.user.UserKakaoAuthResI;
+import com.monkeypenthouse.core.controller.dto.user.UserNaverAuthResI;
+import com.monkeypenthouse.core.exception.dto.AdditionalInfoNeededResponseDto;
 import com.monkeypenthouse.core.exception.*;
 import com.monkeypenthouse.core.repository.RefreshTokenRepository;
 import com.monkeypenthouse.core.repository.RoomRepository;
 import com.monkeypenthouse.core.repository.UserRepository;
+import com.monkeypenthouse.core.repository.entity.*;
 import com.monkeypenthouse.core.security.PrincipalDetails;
 import com.monkeypenthouse.core.security.SecurityUtil;
 import com.monkeypenthouse.core.security.TokenProvider;
-import com.monkeypenthouse.core.vo.CheckUserResponseVo;
-import com.monkeypenthouse.core.dto.exception.LifeStyleNeededResponseDTO;
+import com.monkeypenthouse.core.service.dto.user.*;
+import com.monkeypenthouse.core.exception.dto.LifeStyleNeededResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -51,24 +51,39 @@ public class UserServiceImpl implements UserService {
     // 회원 추가
     @Override
     @Transactional
-    public User add(User user) throws DataIntegrityViolationException{
-        try {
-            // 회원 정보 저장
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            user.setAuthority(Authority.USER);
-            user = userRepository.save(user);
-        } catch (DataIntegrityViolationException e) {
-            throw new DataIntegrityViolationException("이미 존재하는 회원의 정보입니다.");
-        }
+    public UserSignUpResS add(UserSignUpReqS params) throws DataIntegrityViolationException{
+        User user = userRepository.save(new User(
+                null,
+                params.getName(),
+                null,
+                null,
+                params.getBirth(),
+                params.getGender(),
+                params.getEmail(),
+                passwordEncoder.encode(params.getPassword()),
+                params.getPhoneNum(),
+                params.getInfoReceivable(),
+                null,
+                Authority.USER,
+                LoginType.LOCAL,
+                null
+        ));
 
         // 회원에게 빈 방 주기
         roomRepository.updateUserIdForVoidRoom(user.getId(), user.getAuthority());
-        Optional<Room> roomOptional = roomRepository.findByUserId(user.getId());
-        Room room = roomOptional.orElseThrow(() -> new CommonException(ResponseCode.DATA_NOT_FOUND));
+        Room room = roomRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new CommonException(ResponseCode.DATA_NOT_FOUND));
         userRepository.updateRoomId(user.getId(), room);
 
-        user.setRoom(room);
-        return user;
+        return UserSignUpResS.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .birth(user.getBirth())
+                .gender(user.getGender())
+                .email(user.getEmail())
+                .phoneNum(user.getPhoneNum())
+                .roomId(room.getId())
+                .build();
     }
 
     // Id로 회원 조회
@@ -106,10 +121,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public Map<String, Object> login(User user) throws AuthenticationException {
+    public UserLoginResS login(UserLoginReqS params) throws AuthenticationException {
 
         // 1. Login ID/PW를 기반으로 authenticationToken 생성
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(params.getEmail(), params.getPassword());
 
         Authentication authentication = null;
         // 2. 실제로 검증이 이뤄지는 부분
@@ -134,7 +149,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> map = new HashMap<>();
         // 라이프스타일 테스트 미완료 회원 처리
         if (loggedInUser.getLifeStyle() == null) {
-            LifeStyleNeededResponseDTO dto = LifeStyleNeededResponseDTO.builder()
+            LifeStyleNeededResponseDto dto = LifeStyleNeededResponseDto.builder()
                     .id(loggedInUser.getId())
                     .email(loggedInUser.getEmail())
                     .name(loggedInUser.getName())
@@ -144,24 +159,36 @@ public class UserServiceImpl implements UserService {
                     .phoneNum(loggedInUser.getPhoneNum())
                     .build();
             throw new CommonException(ResponseCode.LIFE_STYLE_TEST_NEEDED, dto);
-        } else {
-            // 4. 인증 정보를 토대로 JWT 토큰, RefreshToken 저장
-            Tokens tokens = tokenProvider.generateTokens(authentication);
-            RefreshToken refreshToken = RefreshToken.builder()
-                    .key(authentication.getName())
-                    .value(tokens.getRefreshToken())
-                    .build();
-            refreshTokenRepository.save(refreshToken);
-
-            map.put("user", loggedInUser);
-            map.put("tokens", tokens);
         }
-        return map;
+
+        // 4. 인증 정보를 토대로 JWT 토큰, RefreshToken 저장
+        Tokens tokens = tokenProvider.generateTokens(authentication);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .key(authentication.getName())
+                .value(tokens.getRefreshToken())
+                .build();
+        refreshTokenRepository.save(refreshToken);
+
+        return UserLoginResS.builder()
+                .id(loggedInUser.getId())
+                .name(loggedInUser.getName())
+                .birth(loggedInUser.getBirth())
+                .gender(loggedInUser.getGender())
+                .email(loggedInUser.getEmail())
+                .phoneNum(loggedInUser.getPhoneNum())
+                .roomId(loggedInUser.getRoom().getId())
+                .lifeStyle(loggedInUser.getLifeStyle())
+                .grantType(tokens.getGrantType())
+                .accessToken(tokens.getAccessToken())
+                .accessTokenExpiresIn(tokens.getAccessTokenExpiresIn())
+                .refreshToken(tokens.getRefreshToken())
+                .refreshTokenExpiresIn(tokens.getRefreshTokenExpiresIn())
+                .build();
     }
 
     @Override
     @Transactional
-    public Tokens reissue(String refreshToken) {
+    public UserGetTokenResS reissue(String refreshToken) {
 
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -182,19 +209,37 @@ public class UserServiceImpl implements UserService {
         refreshTokenRepository.save(newRefreshToken);
 
         // 토큰 발급
-        return newTokens;
+        return UserGetTokenResS.builder()
+                .grantType(newTokens.getGrantType())
+                .accessToken(newTokens.getAccessToken())
+                .accessTokenExpiresIn(newTokens.getAccessTokenExpiresIn())
+                .refreshToken(newTokens.getRefreshToken())
+                .refreshTokenExpiresIn(newTokens.getRefreshTokenExpiresIn())
+                .build();
     }
 
     @Override
-    public User getMyInfo() {
-        return userRepository.findByEmail(SecurityUtil.getCurrentUserEmail())
+    public UserGetMeResS getMyInfo() {
+        User user = userRepository.findByEmail(SecurityUtil.getCurrentUserEmail())
                 .orElseThrow(() -> new CommonException(ResponseCode.USER_NOT_FOUND));
+        return UserGetMeResS.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .birth(user.getBirth())
+                .gender(user.getGender())
+                .email(user.getEmail())
+                .phoneNum(user.getPhoneNum())
+                .roomId(user.getRoom().getId())
+                .authority(user.getAuthority())
+                .loginType(user.getLoginType())
+                .lifeStyle(user.getLifeStyle())
+                .build();
     }
 
     @Override
     @Transactional
-    public User authKakao(String token) {
-        KakaoUserDTO kakaoUser;
+    public UserLoginResS authKakao(String token) {
+        UserKakaoAuthResI kakaoUser;
         try {
             kakaoUser = kakaoConnector.getUserInfo(token);
         } catch (Exception e) {
@@ -216,7 +261,7 @@ public class UserServiceImpl implements UserService {
 
         User loggedInUser = optionalUser
                 .orElseThrow(() -> {
-                    AdditionalInfoNeededResponseDTO dto = AdditionalInfoNeededResponseDTO.builder()
+                    AdditionalInfoNeededResponseDto dto = AdditionalInfoNeededResponseDto.builder()
                         .name(kakaoUser.getKakao_account().getProfile().getNickname())
                         .gender(kakaoUser.getKakao_account().isHas_gender() ? kakaoUser.getKakao_account().getGender().equals("female") ? 0 : 1 : 2)
                         .email(kakaoUser.getKakao_account().isHas_email() ? kakaoUser.getKakao_account().getEmail() : null)
@@ -225,13 +270,14 @@ public class UserServiceImpl implements UserService {
                         .build();
                     return new CommonException(ResponseCode.ADDITIONAL_INFO_NEEDED, dto);
                 });
-        return loggedInUser;
+
+        return login(new UserLoginReqS(loggedInUser.getEmail(), loggedInUser.getPassword()));
     }
 
     @Override
     @Transactional
-    public User authNaver(String token) {
-        NaverUserDTO naverUser;
+    public UserLoginResS authNaver(String token) {
+        UserNaverAuthResI naverUser;
         try {
             naverUser = naverConnector.getUserInfo(token);
         } catch (Exception e) {
@@ -241,7 +287,7 @@ public class UserServiceImpl implements UserService {
 
         User loggedInUser = optionalUser
                 .orElseThrow(() -> {
-                    AdditionalInfoNeededResponseDTO dto = AdditionalInfoNeededResponseDTO.builder()
+                    AdditionalInfoNeededResponseDto dto = AdditionalInfoNeededResponseDto.builder()
                         .name(naverUser.getResponse().getName())
                         .gender(naverUser.getResponse().getGender() == null ?
                                 2 : naverUser.getResponse().getGender().equals("F") ? 0 : 1)
@@ -253,13 +299,18 @@ public class UserServiceImpl implements UserService {
                         .build();
                     return new CommonException(ResponseCode.ADDITIONAL_INFO_NEEDED, dto);
                 });
-        return loggedInUser;
+        return login(new UserLoginReqS(loggedInUser.getEmail(), loggedInUser.getPassword()));
     }
 
     @Override
-    public User findEmail(String phoneNum) {
-        return userRepository.findByPhoneNum(phoneNum)
+    public UserGetEmailByPhoneNumResS findEmail(String phoneNum) {
+        User user = userRepository.findByPhoneNum(phoneNum)
                 .orElseThrow(() -> new CommonException(ResponseCode.USER_NOT_FOUND));
+        return UserGetEmailByPhoneNumResS.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .loginType(user.getLoginType())
+                .build();
     }
 
     @Override
@@ -277,10 +328,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void updateLifeStyle(User user) {
+    public void updateLifeStyle(UserUpdateLifeStyleReqS params) {
          int result =  userRepository.updateLifeStyle(
-                user.getLifeStyle(),
-                user.getId());
+                 params.getLifeStyle(),
+                 params.getId());
 
         if (result == 0) {
             throw new CommonException(ResponseCode.USER_NOT_FOUND);
@@ -304,15 +355,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CheckUserResponseVo checkUser(String phoneNum, String email) {
+    public UserCheckExistResS checkUser(final UserCheckExistReqS params) {
 
-        Boolean result = userRepository.existsByPhoneNumAndEmail(phoneNum, email);
+        Boolean result = userRepository.existsByPhoneNumAndEmail(params.getPhoneNum(), params.getEmail());
         if (!result) {
-            return CheckUserResponseVo.builder().result(false).build();
+            return UserCheckExistResS.builder().result(false).build();
         }
-        String token = tokenProvider.generateSimpleToken(email, "GUEST", 1000 * 60 * 15);
+        String token = tokenProvider.generateSimpleToken(params.getEmail(), "GUEST", 1000 * 60 * 15);
 
-        return CheckUserResponseVo
+        return UserCheckExistResS
                 .builder()
                 .result(true)
                 .token(token)

@@ -40,13 +40,17 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	testImplementation 'org.springframework.security:spring-security-test'
-	implementation 'mysql:mysql-connector-java:5.1.6'
+	runtimeOnly 'mysql:mysql-connector-java:8.0.28'
+
+	// Redisson 관련 의존성
+	implementation 'org.redisson:redisson-spring-boot-starter:3.17.1'
+
 	// jwt 관련 의존성
 	compileOnly 'io.jsonwebtoken:jjwt-api:0.11.2'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.2'
 
-	// sms 인증 관련 의존성
+	// sms 인증 관련 의존성`
 	implementation group: 'net.nurigo', name: 'javaSDK', version: '2.2'
 
 	// 소셜 로그인을 위한 OAuth2

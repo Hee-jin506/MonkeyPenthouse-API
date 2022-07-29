@@ -1,15 +1,14 @@
 package com.monkeypenthouse.core.repository;
 
-import com.monkeypenthouse.core.entity.LifeStyle;
-import com.monkeypenthouse.core.entity.LoginType;
-import com.monkeypenthouse.core.entity.Room;
-import com.monkeypenthouse.core.entity.User;
+import com.monkeypenthouse.core.repository.entity.LifeStyle;
+import com.monkeypenthouse.core.repository.entity.LoginType;
+import com.monkeypenthouse.core.repository.entity.Room;
+import com.monkeypenthouse.core.repository.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {

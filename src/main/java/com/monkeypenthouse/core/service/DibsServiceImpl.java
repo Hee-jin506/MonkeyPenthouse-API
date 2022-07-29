@@ -1,10 +1,10 @@
 package com.monkeypenthouse.core.service;
 
 import com.monkeypenthouse.core.constant.ResponseCode;
-import com.monkeypenthouse.core.entity.Amenity;
-import com.monkeypenthouse.core.entity.Dibs;
-import com.monkeypenthouse.core.entity.DibsId;
-import com.monkeypenthouse.core.entity.User;
+import com.monkeypenthouse.core.repository.entity.Amenity;
+import com.monkeypenthouse.core.repository.entity.Dibs;
+import com.monkeypenthouse.core.repository.entity.DibsId;
+import com.monkeypenthouse.core.repository.entity.User;
 import com.monkeypenthouse.core.exception.CommonException;
 import com.monkeypenthouse.core.repository.AmenityRepository;
 import com.monkeypenthouse.core.repository.DibsRepository;
@@ -33,9 +33,10 @@ public class DibsServiceImpl implements DibsService {
                 throw new CommonException(ResponseCode.DATA_DUPLICATED);
         });
 
-        final Dibs dibs = new Dibs(user, amenity);
-
-        dibsRepository.save(dibs);
+        dibsRepository.save(Dibs.builder()
+                .user(user)
+                .amenity(amenity)
+                .build());
     }
 
     @Override

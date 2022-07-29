@@ -1,7 +1,7 @@
 package com.monkeypenthouse.core.repository;
 
-import com.monkeypenthouse.core.entity.Room;
-import com.monkeypenthouse.core.entity.Authority;
+import com.monkeypenthouse.core.repository.entity.Room;
+import com.monkeypenthouse.core.repository.entity.Authority;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

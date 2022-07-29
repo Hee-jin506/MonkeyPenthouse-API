@@ -1,11 +1,9 @@
 package com.monkeypenthouse.core.repository;
 
-import com.monkeypenthouse.core.entity.Amenity;
-import com.monkeypenthouse.core.entity.AmenityCategory;
-import com.monkeypenthouse.core.entity.AmenityCategoryId;
-import org.springframework.data.jpa.repository.Query;
+import com.monkeypenthouse.core.repository.entity.Amenity;
+import com.monkeypenthouse.core.repository.entity.AmenityCategory;
+import com.monkeypenthouse.core.repository.entity.AmenityCategoryId;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 

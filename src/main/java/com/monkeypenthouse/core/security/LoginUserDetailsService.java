@@ -1,6 +1,6 @@
 package com.monkeypenthouse.core.security;
 
-import com.monkeypenthouse.core.entity.User;
+import com.monkeypenthouse.core.repository.entity.User;
 import com.monkeypenthouse.core.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

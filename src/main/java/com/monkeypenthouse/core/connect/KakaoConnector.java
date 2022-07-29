@@ -1,12 +1,10 @@
 package com.monkeypenthouse.core.connect;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.monkeypenthouse.core.dto.KakaoUserDTO;
-import com.monkeypenthouse.core.dto.TokenDTO.*;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import com.monkeypenthouse.core.controller.dto.user.UserKakaoAuthResI;
+import com.monkeypenthouse.core.controller.dto.user.UserKakaoTokenResI;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,8 +16,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 @Component
-@NoArgsConstructor
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class KakaoConnector {
     @Value("${kakao.authorization-grant-type}")
     private String AUTHORIZATION_GRANT_TYPE;
@@ -34,7 +31,7 @@ public class KakaoConnector {
     @Value("${kakao.user-info-uri}")
     private String USER_INFO_URI;
 
-    public KakaoResDTO getToken(String code) throws Exception {
+    public UserKakaoTokenResI getToken(String code) throws Exception {
         // 인증 코드를 갖고 토큰 받아오기
         RestTemplate rt = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -58,13 +55,13 @@ public class KakaoConnector {
         ObjectMapper obMapper = new ObjectMapper();
 
         try {
-            return obMapper.readValue(response.getBody(), KakaoResDTO.class);
+            return obMapper.readValue(response.getBody(), UserKakaoTokenResI.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("토큰 파싱 에러 : " + e.getMessage());
         }
     }
 
-    public KakaoUserDTO getUserInfo(String accessToken) throws Exception {
+    public UserKakaoAuthResI getUserInfo(String accessToken) throws Exception {
         // 회원정보 받아오기
         RestTemplate rt = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -80,6 +77,6 @@ public class KakaoConnector {
         );
         ObjectMapper obMapper = new ObjectMapper();
 
-        return obMapper.readValue(response.getBody(), KakaoUserDTO.class);
+        return obMapper.readValue(response.getBody(), UserKakaoAuthResI.class);
     }
 }

@@ -1,6 +1,9 @@
 package com.monkeypenthouse.core.repository;
 
-import com.monkeypenthouse.core.entity.*;
+import com.monkeypenthouse.core.repository.entity.Amenity;
+import com.monkeypenthouse.core.repository.entity.Dibs;
+import com.monkeypenthouse.core.repository.entity.DibsId;
+import com.monkeypenthouse.core.repository.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

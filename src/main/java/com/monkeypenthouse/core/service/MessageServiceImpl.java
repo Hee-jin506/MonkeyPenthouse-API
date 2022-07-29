@@ -1,7 +1,8 @@
 package com.monkeypenthouse.core.service;
 
-import com.monkeypenthouse.core.entity.SmsAuthNum;
+import com.monkeypenthouse.core.repository.entity.SmsAuthNum;
 import com.monkeypenthouse.core.repository.SmsAuthNumRepository;
+import com.monkeypenthouse.core.service.dto.user.UserCheckAuthReqS;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.nurigo.java_sdk.api.Message;
@@ -31,7 +32,7 @@ public class MessageServiceImpl implements MessageService {
     private final SmsAuthNumRepository smsAuthNumRepository;
 
     @Override
-    public void sendAuthNum(String toNumber) throws CoolsmsException {
+    public void sendAuthNum(final String toNumber) throws CoolsmsException {
         String randomNumber = numberGen(6,1);
 
         Message message = new Message(apiKey, apiSecret);
@@ -50,9 +51,9 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public boolean checkAuthNum(String phoneNum, String authNum) throws Exception {
-        Optional<SmsAuthNum> numOptional = smsAuthNumRepository.findById(phoneNum);
-        return numOptional.filter(smsAuthNum -> authNum.equals(smsAuthNum.getAuthNum())).isPresent();
+    public boolean checkAuthNum(final UserCheckAuthReqS params) {
+        Optional<SmsAuthNum> numOptional = smsAuthNumRepository.findById(params.getPhoneNum());
+        return numOptional.filter(smsAuthNum -> params.getAuthNum().equals(smsAuthNum.getAuthNum())).isPresent();
     }
 
     //     len : 생성할 난수의 길이

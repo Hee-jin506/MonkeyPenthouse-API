@@ -1,6 +1,6 @@
 package com.monkeypenthouse.core.security;
 
-import com.monkeypenthouse.core.entity.Tokens;
+import com.monkeypenthouse.core.repository.entity.Tokens;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;

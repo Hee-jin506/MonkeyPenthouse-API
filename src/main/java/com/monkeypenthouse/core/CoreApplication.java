@@ -14,7 +14,7 @@ import java.util.TimeZone;
 @EnableScheduling
 @EntityScan(
 		basePackageClasses = {Jsr310JpaConverters.class},
-		basePackages = {"com.monkeypenthouse.core.entity"})
+		basePackages = {"com.monkeypenthouse.core.repository.entity"})
 @SpringBootApplication
 public class CoreApplication {
 

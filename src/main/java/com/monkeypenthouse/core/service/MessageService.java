@@ -1,8 +1,9 @@
 package com.monkeypenthouse.core.service;
 
+import com.monkeypenthouse.core.service.dto.user.UserCheckAuthReqS;
 import net.nurigo.java_sdk.exceptions.CoolsmsException;
 
 public interface MessageService {
-    void sendAuthNum(String phoneNum) throws CoolsmsException;
-    boolean checkAuthNum(String phoneNum, String authNum) throws Exception;
+    void sendAuthNum(final String phoneNum) throws CoolsmsException;
+    boolean checkAuthNum(final UserCheckAuthReqS params);
 }

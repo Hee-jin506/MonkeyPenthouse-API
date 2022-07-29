@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -68,7 +69,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/").permitAll()
                 .antMatchers("/user/all/**").permitAll()
                 .antMatchers("/amenity/**").permitAll()
+                .antMatchers("/photo/**").permitAll()
                 .antMatchers("/user/guest/**").hasAnyAuthority("GUEST")
+//                .antMatchers(HttpMethod.POST,"/photo/carousel").hasAnyAuthority("ADMIN")
+//                .antMatchers(HttpMethod.POST, "/amenity/").hasAnyAuthority("ADMIN")
                 .anyRequest().authenticated()
 
                 // JwtFilter를 addFilterBefore로 등록했던 JwtSecurityConfig 클래스를 적용
